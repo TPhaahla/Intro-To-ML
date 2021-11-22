@@ -1,0 +1,151 @@
+---
+title: "Lab 2: Validation Analysis "
+author: "Tshiamo Phaahla"
+date: "19/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+library(rpart)
+library(rpart.plot)
+#par(col.axis = 'white',col.lab = 'white',col.main = 'white',col.sub = 'white',fg = 'white',bg = 'black', lwd = 2)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Please Note The Following.
+
+The content contained in this document is from the second lab session in a series of lectures prepared for a two-week introductory course in Machine Learning at the University of Cape Town, South Africa. The course is aimed at students with some background in statistical modelling, computing, and linear algebra. It is recommended that you watch the third Key-Point Lecture in this series before tackling the lab session.\  
+
+The content of the lecture series by Etienne A.D. Pienaar is licensed under CC BY-NC-ND 4.0.\  
+
+Link to the the relevant lab <https://youtu.be/Lx0KsiwivKw>\  
+
+=============================================================
+
+## Example 1
+
+### Goal: Fit a tree model to the simulated dataset, applying the appropriate complexity controls. Compare the resulting response curve to one fitted using an unconstrained tree. 
+
+### Given: A simple sinusoidal pattern with noise.
+
+```{r sinusoidal}
+set.seed(2021)
+N = 250
+X = runif(N, -1, 1)
+e = rnorm(N, 0, 0.25)
+Y = sin(2*pi*X) + e
+plot(Y~X, pch=16)
+
+```
+
+## Task 1: Fit a tree model and perform a validation analysis in order to select a level of pruning to apply. See ?printcp and ?plotcp.
+
+```{r task1}
+res = rpart(Y~X, control = rpart.control(cp=0.01))
+
+plotcp(res, upper=c("splits"))
+
+printcp(res)
+
+res_pruned = prune.rpart(res, cp=0.024)
+
+```
+
+## Task 2: Compare the response curves under a unconstrained tree and that of the pruned model. 
+
+```{r task2}
+
+M =100
+X_dummy = seq(min(X), max(X), length=M)
+Lat = data.frame(X = X_dummy)
+
+plot(Y~X, pch=16)
+predY = predict(res, Lat)
+predY_pruned = predict(res_pruned, Lat)
+
+lines(predY~Lat$X, col="limegreen", lwd=3)
+lines(predY_pruned~Lat$X, col="red", lwd=3)
+
+```
+
+#### Some Interpretation
+
+The unconstrained model follows the data more closely. This means that is accounts for some of the noise and is replicating characteristics which are unique to this data set. When this happens we are said to be overfitting our model. What we want is the constrained model which follows the underlying pattern of the data.
+
+\newpage
+## Example 2:
+
+### Goal: Analyse the ptitanic data from the rpart.plot package using an appropriately chosen tree-based model.
+
+## Task 1: Calculate the relative frequency of binary-encoded response conditional on the sex and pclass variables (Intersections as well). What do these reveal about the data?
+
+We will start by creating a boolean vector of our response variable.
+
+```{r task1ex2}
+
+data(ptitanic)
+attach(ptitanic)
+
+Y = (survived == 'survived')
+
+mean(Y[sex=='male'])
+mean(Y[sex=='female'])
+
+mean(Y[pclass=='1st'])
+mean(Y[pclass=='2nd'])
+mean(Y[pclass=='3rd'])
+
+mean(Y[(pclass=='1st')&(sex=='male')])
+mean(Y[(pclass=='2nd')&(sex=='male')])
+mean(Y[(pclass=='3rd')&(sex=='male')])
+
+mean(Y[(pclass=='1st')&(sex=='female')])
+mean(Y[(pclass=='2nd')&(sex=='female')])
+mean(Y[(pclass=='3rd')&(sex=='female')])
+
+
+
+
+```
+
+#### Initial Comments
+
+The survival rate of males in significantly lower (`19%`) than of females (`73%`).  
+The first class passengers have the highest survival rate at `62%`, compared to the second and third class passengers at `43%` and `26%` respectively.
+
+The intersections show that males in first class had a higher survival rate than those in second and third class. The same can be said for females although the general trend of males having a lower survival rate is still evident event when taking into account intersections.
+
+## Task 2: Fit a tree model using all of the available inputs and interpret the resulting model. 
+
+```{r task2ex2}
+
+set.seed(2021)
+model = rpart(survived~., data = ptitanic, control= rpart.control(cp=0.001))
+plotcp(model, upper=c("splits"))
+
+model_pruned = prune.rpart(model, cp=0.013)
+
+rpart.plot(model, type=4, fallen.leaves=F, branch=1)
+rpart.plot(model_pruned, type=4, fallen.leaves = F, branch=1)
+
+```
+
+### Some Interpretation
+
+In root node we see that you are more likely to have not survived. If you are a male then survival rate drops significantly. Females were more likely to survive then not. Shouldn't be a surprise given the major discrepancies between the empirical probabilities of survival based on sex.
+From our pruned model we can see that the most significant predictor in determining survival is `sex`. The females had a higher survival rate than males. 
+
+`Age` was a significant predictor, but only for males. For females the most significant predictor in the class. If you were a younger male then your survival probability increases.\  
+On the female side of the tree, we see that you're more likely to survive than not. If you are in 1st and 2nd class, then you're much more likely to have survived. Unfortunately if you are a third class passenger then the same cannot be said.
+
+This more or less follows from what we saw in the EDA.\  
+Here, because we have an algorithm that is tied to an objective function and we've conducted a validation analysis with a predictive approach in mind. We can see that these variables are indeed predictive in whether you have survived or not.\  
+
+We also know that there are class discrepancies but these discrepancies are drowned out if you are male simply because the survival rate is just so low anyways. On the female side they are predictive.\  
+
+
+
+
+
+
