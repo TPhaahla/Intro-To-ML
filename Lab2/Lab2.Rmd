@@ -1,8 +1,10 @@
 ---
-title: "Lab 2: Validation Analysis "
+title: 'Lab 2: Validation Analysis '
 author: "Tshiamo Phaahla"
 date: "19/11/2021"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}

@@ -3,9 +3,9 @@ title: 'Lab 3: Exploring The Neural Net Package'
 author: "Tshiamo Phaahla"
 date: "19/11/2021"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}

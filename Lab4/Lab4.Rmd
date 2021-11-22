@@ -3,9 +3,9 @@ title: "Introduction to Regularization using the h2o package."
 author: "Tshiamo Phaahla"
 date: "20/11/2021"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
