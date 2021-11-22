@@ -1,0 +1,101 @@
+## ----setup, include=FALSE------------------------------------------------------------------------------------------------------------------------
+knitr::opts_chunk$set(echo = TRUE)
+par(col.axis = 'white',col.lab = 'white',col.main = 'white',col.sub = 'white',fg = 'white',bg = 'black', lwd = 2)
+
+
+
+## ----task1---------------------------------------------------------------------------------------------------------------------------------------
+
+set.seed(2021)
+N = 250
+X = runif(N, -1, 1)
+e = rnorm(N, 0, 0.25)
+Y = sin(2*pi*X) + e
+plot(Y~X, pch=16, col="magenta")
+
+
+
+## ----task2---------------------------------------------------------------------------------------------------------------------------------------
+
+library(tree)
+
+res = tree(Y~X)
+
+
+
+## ----task3---------------------------------------------------------------------------------------------------------------------------------------
+
+M = 100
+X_dummy = seq(min(X), max(X), length=M)
+Lat = data.frame(X = X_dummy)
+pred_Y = predict(res, Lat)
+plot(Y~X, pch=16, col='magenta')
+lines(pred_Y~ Lat$X, lwd=3) 
+
+
+
+
+## ----task4---------------------------------------------------------------------------------------------------------------------------------------
+
+res1 = tree(Y~X, control=tree.control(N,5,10,0.001))
+
+plot(Y~X, pch=16, col="magenta")
+pred_Y1 = predict(res1, Lat)
+lines(pred_Y1~Lat$X, lwd=3)
+
+
+
+
+
+## ----task1cls------------------------------------------------------------------------------------------------------------------------------------
+
+data(iris)
+attach(iris)
+res2 = tree(Species~.,data=iris, control = tree.control(length(Species), 5, 10, mindev=0.01))
+
+plot(res2)
+text(res2)
+
+
+
+## ----task2cls------------------------------------------------------------------------------------------------------------------------------------
+
+library(rpart)
+library(rpart.plot)
+
+res4 = rpart(Species~., data=iris, control= rpart.control(cp=0.01))
+rpart.plot(res4,  type=4, fallen.leaves = F, branch = 1, branch.lty=2)
+
+
+
+
+## ----task3cls------------------------------------------------------------------------------------------------------------------------------------
+
+res4 = rpart(Species~ Petal.Length + Petal.Width, data=iris, 
+             control=rpart.control(cp=0.01))
+M=200
+X1_dummy = seq(min(Petal.Width), max(Petal.Width), length=M)
+X2_dummy = seq(min(Petal.Length), max(Petal.Length), length=M)
+
+
+#Taking coordinates of predictors and predicting the response for those coordinates
+
+x1 = rep(X1_dummy, M)
+x2 = rep(X2_dummy, each=M)
+
+#plot(x2~x1)
+
+Lat2 = data.frame(Petal.Width=x1, Petal.Length=x2)
+
+pred = predict(res4, newdata = Lat2, type='prob')
+
+#Find whichever has the max probability from our predictions and classify 
+clss = apply(pred, 1, which.max)
+
+cols = c('blue', 'gray', 'purple')
+
+plot(x2~x1, pch=16,  col=cols[clss])
+
+text(iris$Petal.Length~iris$Petal.Width, labels = as.numeric(iris$Species))
+
+
